@@ -10,7 +10,53 @@
 </head>
 
 <body>
-    <h1>Welcome to the Emoji Hub!</h1>
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div class="display-3 text-center my-5">
+                    Emoji Hub
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="contents" class="row">
+
+        </div>
+    </div>
+
+    <script>
+        var contents = document.getElementById("contents");
+
+        const getEmojis = async () => {
+            for (let i = 1; i <= 100; i++) {
+                const response = await fetch('https://emojihub.yurace.pro/api/all');
+                const emojis = await response.json();
+
+                const emoji = emojis[i];
+
+                contents.innerHTML += `
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card my-3 shadow p-5 rounded-5 text-center">
+                        <div class="mx-auto rounded-circle d-flex align-items-center justify-content-center"
+                        style="width: 200px; height: 200px; background-color: #FCF7DE; font-size: 5rem;">
+                        `+emoji.htmlCode[0]+ `
+                        </div>
+                        <div class="my-3 h4">
+                        #`+i+ ` ` +emoji.name+ `
+                        </div>
+                        <div class="my-3 rounded-5 border py-2">
+                        `+emoji.category+ `
+                        </div>
+                    </div>
+                </div>
+            `;
+            }
+        }
+
+        getEmojis();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
