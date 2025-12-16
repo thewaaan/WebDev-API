@@ -5,8 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Emoji Hub</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="assets/img/my_emoji.png" rel="icon">
 
@@ -15,7 +15,7 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        .cat-btn {
+        .category-btn {
             width: 34px;
             height: 34px;
             border-radius: 50%;
@@ -27,20 +27,22 @@
             transition: 0.2s;
         }
 
-        .cat-btn:hover {
+        .category-btn:hover {
             transform: translateY(-6px);
             box-shadow: 0 5px 10px #00000033;
         }
 
         .category-nav {
-            position:fixed;
-            bottom:20px;
-            left:50%;
-            transform:translateX(-50%);
-            background:#ffe96a96;
-            padding:10px 14px;
-            border-radius:30px;
-            z-index:999;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffe96a69;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px #00000066;
+            padding: 10px 14px;
+            border-radius: 30px;
+            z-index: 999;
         }
 
         .copy-toast {
@@ -48,8 +50,8 @@
             bottom: 90px;
             left: 50%;
             transform: translateX(-50%);
-            background: #000;
-            color: #fff;
+            background: #000000;
+            color: #ffffff;
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 0.8rem;
@@ -72,25 +74,38 @@
         </div>
     </div>
 
-    <div class="container-fluid" style="height:120px; margin-top:-120px; background:linear-gradient(transparent, #ffffff);">
+    <div class="container-fluid" style="height:120px; margin-top:-120px; background:linear-gradient(transparent, #ffffff);"></div>
+
+    <div class="container my-3">
+        <div class="row justify-content-center g-2 py-2">
+            <div class="col-6 col-md-5 col-lg-4">
+                <input type="text" id="searchInput" class="form-control rounded-5" placeholder="Search emoji" oninput="doSearch()">
+            </div>
+            <div class="col-1">
+                <button class="btn btn-danger w-100 rounded-5" onclick="clearSearch()">✖</button>
+            </div>
+        </div>
     </div>
 
     <div class="container my-4">
-        <div class="fw-bold mb-2">
-            Recently Used
-            <span id="clearRecent" style="font-size:0.7rem; cursor:pointer; color:#0d6efd;">
-                <u>Clear</u>
-            </span>
+        <div class="row">
+            <div class="col">
+                <div class="fw-bold mb-2">
+                    Recently Used
+                    <span id="clearRecent" style="font-size:0.7rem; cursor:pointer; color:#0d6efd;">
+                        <u>Clear</u>
+                    </span>
+                </div>
+                <div id="recent" class="d-flex flex-wrap gap-2"></div>
+            </div>
         </div>
-        <div id="recent" class="d-flex flex-wrap gap-2"></div>
     </div>
 
     <div class="container my-5">
-        <div class="row" id="contents"></div>
+        <div id="contents" class="row"></div>
     </div>
 
-    <div id="categoryNav" class="d-flex justify-content-center gap-2 shadow-lg category-nav">
-    </div>
+    <div id="categoryNav" class="d-flex justify-content-center gap-2 shadow-lg category-nav"></div>
 
     <div id="toast" class="copy-toast">
         Copied!
@@ -126,6 +141,14 @@
         var toast = document.getElementById("toast");
 
         var recentEmojis = JSON.parse(localStorage.getItem("recentEmojis")) || [];
+        var allEmojis = [];
+        var searchTimer;
+
+        function htmlCodeToEmoji(htmlCode) {
+            const span = document.createElement("span");
+            span.innerHTML = htmlCode;
+            return span.textContent;
+        }
 
         const getEmojiCode = (emoji) => {
             return emoji.htmlCode.length > 1 ? emoji.htmlCode[0] + emoji.htmlCode[1] : emoji.htmlCode[0];
@@ -144,25 +167,23 @@
 
             recentEmojis = recentEmojis.filter(e => e !== emojiCode);
             recentEmojis.unshift(emojiCode);
-            recentEmojis = recentEmojis.slice(0, 100);
+            recentEmojis = recentEmojis.slice(0, 54);
 
             localStorage.setItem("recentEmojis", JSON.stringify(recentEmojis));
             renderRecent();
         };
 
         const renderRecent = () => {
-            var html = "";
+            recent.innerHTML = "";
             recentEmojis.forEach(emojiCode => {
-                html += `
+                recent.innerHTML += `
                 <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center"
                     style="width:40px; height:40px; font-size:1.5rem; cursor:pointer; background:#ffffff;"
-                    title="Copy emoji" aria-label="Copy emoji"
-                    onclick="copyEmoji('`+emojiCode+`')">
+                    title="Copy" aria-label="Copy emoji" onclick="copyEmoji('`+emojiCode+`')">
                     `+emojiCode+`
                 </div>
                 `;
             });
-            recent.innerHTML = html;
         };
 
         clearRecent.onclick = () => {
@@ -174,6 +195,16 @@
         const renderEmojis = (emojis) => {
             contents.innerHTML = "";
             categoryNav.innerHTML = "";
+            categoryNav.style.display = emojis.length ? "flex" : "none";
+
+            if (!emojis.length) {
+                contents.innerHTML = `
+                <div class="col-12 text-center text-muted">
+                    No emojis found
+                </div>
+                `;
+                return;
+            }
 
             var grouped = {};
             emojis.forEach(emoji => {
@@ -184,7 +215,7 @@
 
             for (var category in grouped) {
                 contents.innerHTML += `
-                <div class="col-12 my-4" id="cat-`+category.replace(/ /g, '-')+`">
+                <div class="col-12 my-4" id="category-`+category.replace(/ /g, '-')+`">
                     <div class="text-center fw-bold text-capitalize rounded-pill py-2"
                         style="font-size:1.6rem; background:`+colors[category]+`;">
                         `+category+`
@@ -193,23 +224,21 @@
                 `;
 
                 categoryNav.innerHTML += `
-                <div class="cat-btn"
+                <div class="category-btn"
                     style="background:`+colors[category]+`;" title="`+category+`"
-                    onclick="document.getElementById('cat-`+category.replace(/ /g, '-')+`')
+                    onclick="document.getElementById('category-`+category.replace(/ /g, '-')+`')
                     .scrollIntoView({behavior:'smooth'})">
                     `+icons[category]+`
                 </div>
                 `;
 
                 grouped[category].forEach(emoji => {
-                    var emojiCode = getEmojiCode(emoji);
-                    
+                    var emojiCode = htmlCodeToEmoji(getEmojiCode(emoji));
                     contents.innerHTML += `
                     <div class="col-3 col-sm-2 col-md-1 mb-4 text-center">
                         <div class="rounded-circle shadow-lg mx-auto d-flex align-items-center justify-content-center"
                             style="width:60px; height:60px; font-size:2rem; background:`+colors[category]+`; cursor:pointer;"
-                            title="Copy emoji" aria-label="Copy emoji"
-                            onclick="copyEmoji('`+emojiCode+`')">
+                            title="Copy" aria-label="Copy emoji" onclick="copyEmoji('`+emojiCode+`')">
                             `+emojiCode+`
                         </div>
                         <div style="font-size:0.6rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
@@ -222,10 +251,40 @@
             }
         };
 
+        function doSearch() {
+            clearTimeout(searchTimer);
+
+            searchTimer = setTimeout(() => {
+                const query = document.getElementById("searchInput").value.trim().toLowerCase();
+
+                if (!query) {
+                    renderEmojis(allEmojis);
+                    return;
+                }
+
+                const filtered = allEmojis.filter(emoji => {
+                    const emojiCode = htmlCodeToEmoji(getEmojiCode(emoji));
+                    return (
+                        emoji.name.toLowerCase().includes(query) ||
+                        emoji.category.toLowerCase().includes(query) ||
+                        (emoji.keywords && emoji.keywords.join(" ").toLowerCase().includes(query)) ||
+                        emojiCode === query || emojiCode.includes(query)
+                    );
+                });
+
+                renderEmojis(filtered);
+            }, 120);
+        }
+
+        function clearSearch() {
+            document.getElementById("searchInput").value = "";
+            renderEmojis(allEmojis);
+        }
+
         const getEmojis = async () => {
             const response = await fetch("https://emojihub.yurace.pro/api/all");
-            const emojis = await response.json();
-            renderEmojis(emojis);
+            allEmojis = await response.json();
+            renderEmojis(allEmojis);
             renderRecent();
         };
 
