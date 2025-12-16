@@ -15,6 +15,19 @@
             font-family: 'Poppins', sans-serif;
         }
 
+        .sticky-zone {
+            position: sticky;
+            top: 0;
+            background: #ffffff;
+            z-index: 10;
+        }
+
+        .scroll-zone {
+            height: calc(100vh - 260px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
         .category-btn {
             width: 34px;
             height: 34px;
@@ -31,6 +44,16 @@
             transform: translateY(-6px);
             box-shadow: 0 5px 10px #00000033;
         }
+
+        .emoji-item {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .emoji-item:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 10px #00000033;
+        }
+
 
         .category-nav {
             position: fixed;
@@ -67,44 +90,47 @@
         style="height:100vh; background:url('assets/img/bg.jpg') center/cover no-repeat;">
         <div class="row">
             <div class="col">
-                <div class="fw-bold" style="font-size:3rem;">
-                    Emoji Hub
-                </div>
+                <h1 class="fw-bold">Emoji Hub</h1>
+                <p class=" text-muted small">Search, copy, and reuse emojis instantly</p>
             </div>
         </div>
     </div>
 
     <div class="container-fluid" style="height:120px; margin-top:-120px; background:linear-gradient(transparent, #ffffff);"></div>
 
-    <div class="container my-3">
-        <div class="row justify-content-center g-2 py-2">
-            <div class="col-6 col-md-5 col-lg-4">
-                <input type="text" id="searchInput" class="form-control rounded-5" placeholder="Search emoji" oninput="doSearch()">
-            </div>
-            <div class="col-1">
-                <button class="btn btn-danger w-100 rounded-5" onclick="clearSearch()">✖</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="container my-4">
-        <div class="row">
-            <div class="col">
-                <div class="fw-bold mb-2">
-                    Recently Used
-                    <span id="clearRecent" style="font-size:0.7rem; cursor:pointer; color:#0d6efd;">
-                        <u>Clear</u>
-                    </span>
+    <div class="sticky-zone">
+        <div class="container my-3">
+            <div class="row justify-content-center g-2 py-2">
+                <div class="col-6 col-md-5 col-lg-4">
+                    <input type="text" id="searchInput" class="form-control rounded-5" placeholder="Search emoji" oninput="doSearch()">
                 </div>
-                <div id="recent" class="d-flex flex-wrap gap-2"></div>
+                <div class="col-1">
+                    <button class="btn btn-danger w-100 rounded-5" onclick="clearSearch()">✖</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container my-4">
+            <div class="row">
+                <div class="col">
+                    <div class="fw-bold mb-2">
+                        Recently Used
+                        <span id="clearRecent" style="font-size:0.7rem; cursor:pointer; color:#0d6efd;">
+                            <u>Clear</u>
+                        </span>
+                    </div>
+                    <div id="recent" class="d-flex flex-wrap gap-2"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="container my-5">
-        <div id="contents" class="row"></div>
+    <div class="container-fluid scroll-zone">
+        <div class="container my-5">
+            <div id="contents" class="row"></div>
+        </div>
     </div>
-
+    
     <div id="categoryNav" class="d-flex justify-content-center gap-2 shadow-lg category-nav"></div>
 
     <div id="toast" class="copy-toast">
@@ -139,16 +165,17 @@
         var clearRecent = document.getElementById("clearRecent");
         var categoryNav = document.getElementById("categoryNav");
         var toast = document.getElementById("toast");
+        var searchInput = document.getElementById("searchInput");
 
         var recentEmojis = JSON.parse(localStorage.getItem("recentEmojis")) || [];
         var allEmojis = [];
         var searchTimer;
 
-        function htmlCodeToEmoji(htmlCode) {
-            const span = document.createElement("span");
+        const htmlCodeToEmoji = (htmlCode) => {
+            var span = document.createElement("span");
             span.innerHTML = htmlCode;
             return span.textContent;
-        }
+        };
 
         const getEmojiCode = (emoji) => {
             return emoji.htmlCode.length > 1 ? emoji.htmlCode[0] + emoji.htmlCode[1] : emoji.htmlCode[0];
@@ -177,11 +204,11 @@
             recent.innerHTML = "";
             recentEmojis.forEach(emojiCode => {
                 recent.innerHTML += `
-                <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                    style="width:40px; height:40px; font-size:1.5rem; cursor:pointer; background:#ffffff;"
-                    title="Copy" aria-label="Copy emoji" onclick="copyEmoji('`+emojiCode+`')">
-                    `+emojiCode+`
-                </div>
+                    <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center emoji-item"
+                        style="width:40px; height:40px; font-size:1.5rem; cursor:pointer; background:#ffffff;"
+                        title="Copy" aria-label="Copy emoji" onclick="copyEmoji('`+ emojiCode + `')">
+                        `+ emojiCode + `
+                    </div>
                 `;
             });
         };
@@ -199,91 +226,100 @@
 
             if (!emojis.length) {
                 contents.innerHTML = `
-                <div class="col-12 text-center text-muted">
-                    No emojis found
-                </div>
+                    <div class="col-12 text-center text-muted">
+                        😢 No emojis match your search. Try another keyword!
+                    </div>
                 `;
                 return;
             }
 
+            var html = "";
+            var navHtml = "";
             var grouped = {};
             emojis.forEach(emoji => {
-                var category = emoji.category.toLowerCase();
+                var category = emoji.category;
                 if (!grouped[category]) grouped[category] = [];
                 grouped[category].push(emoji);
             });
 
             for (var category in grouped) {
-                contents.innerHTML += `
-                <div class="col-12 my-4" id="category-`+category.replace(/ /g, '-')+`">
-                    <div class="text-center fw-bold text-capitalize rounded-pill py-2"
-                        style="font-size:1.6rem; background:`+colors[category]+`;">
-                        `+category+`
+                html += `
+                    <div class="col-12 my-4" id="category-`+ category.replace(/ /g, '-') + `">
+                        <div class="text-center fw-bold text-capitalize rounded-pill py-2"
+                            style="font-size:1.6rem; background:`+ colors[category] + `;">
+                            `+ category + `
+                        </div>
                     </div>
-                </div>
                 `;
 
-                categoryNav.innerHTML += `
-                <div class="category-btn"
-                    style="background:`+colors[category]+`;" title="`+category+`"
-                    onclick="document.getElementById('category-`+category.replace(/ /g, '-')+`')
-                    .scrollIntoView({behavior:'smooth'})">
-                    `+icons[category]+`
-                </div>
+                navHtml += `
+                    <div class="category-btn"
+                        style="background:`+ colors[category] + `;" title="` + category + `"
+                        onclick="document.getElementById('category-`+ category.replace(/ /g, '-') + `')
+                        .scrollIntoView({behavior:'smooth', block: 'nearest'})">
+                        `+ icons[category] + `
+                    </div>
                 `;
 
                 grouped[category].forEach(emoji => {
-                    var emojiCode = htmlCodeToEmoji(getEmojiCode(emoji));
-                    contents.innerHTML += `
-                    <div class="col-3 col-sm-2 col-md-1 mb-4 text-center">
-                        <div class="rounded-circle shadow-lg mx-auto d-flex align-items-center justify-content-center"
-                            style="width:60px; height:60px; font-size:2rem; background:`+colors[category]+`; cursor:pointer;"
-                            title="Copy" aria-label="Copy emoji" onclick="copyEmoji('`+emojiCode+`')">
-                            `+emojiCode+`
+                    html += `
+                        <div class="col-3 col-sm-2 col-md-1 mb-4 text-center">
+                            <div class="rounded-circle shadow-lg mx-auto d-flex align-items-center justify-content-center emoji-item"
+                                style="width:60px; height:60px; font-size:2rem; background:`+ colors[category] + `; cursor:pointer;"
+                                title="Copy" aria-label="Copy emoji" onclick="copyEmoji('`+ emoji.emojiCode + `')">
+                                `+ emoji.emojiCode + `
+                            </div>
+                            <div style="font-size:0.6rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                title="`+ emoji.name + `">
+                                `+ emoji.name + `
+                            </div>
                         </div>
-                        <div style="font-size:0.6rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-                            title="`+emoji.name+`">
-                            `+emoji.name+`
-                        </div>
-                    </div>
                     `;
                 });
             }
+
+            contents.innerHTML = html;
+            categoryNav.innerHTML = navHtml;
         };
 
-        function doSearch() {
+        const doSearch = () => {
             clearTimeout(searchTimer);
 
             searchTimer = setTimeout(() => {
-                const query = document.getElementById("searchInput").value.trim().toLowerCase();
-
+                var query = searchInput.value.trim().toLowerCase();
                 if (!query) {
                     renderEmojis(allEmojis);
                     return;
                 }
-
-                const filtered = allEmojis.filter(emoji => {
-                    const emojiCode = htmlCodeToEmoji(getEmojiCode(emoji));
-                    return (
-                        emoji.name.toLowerCase().includes(query) ||
-                        emoji.category.toLowerCase().includes(query) ||
-                        (emoji.keywords && emoji.keywords.join(" ").toLowerCase().includes(query)) ||
-                        emojiCode === query || emojiCode.includes(query)
-                    );
-                });
+                var filtered = allEmojis.filter(emoji =>
+                    emoji.name.includes(query) ||
+                    emoji.category.includes(query) ||
+                    (emoji.keywords && emoji.keywords.join(" ").includes(query)) ||
+                    emoji.emojiCode.includes(query)
+                );
 
                 renderEmojis(filtered);
             }, 120);
         }
 
-        function clearSearch() {
-            document.getElementById("searchInput").value = "";
+        const clearSearch = () => {
+            searchInput.value = "";
             renderEmojis(allEmojis);
-        }
+        };
 
         const getEmojis = async () => {
-            const response = await fetch("https://emojihub.yurace.pro/api/all");
+            var response = await fetch("https://emojihub.yurace.pro/api/all");
             allEmojis = await response.json();
+
+            allEmojis.forEach(emoji => {
+                emoji.emojiCode = htmlCodeToEmoji(getEmojiCode(emoji));
+                emoji.name = emoji.name.toLowerCase();
+                emoji.category = emoji.category.toLowerCase();
+                if (emoji.keywords) {
+                    emoji.keywords = emoji.keywords.map(k => k.toLowerCase());
+                }
+            });
+
             renderEmojis(allEmojis);
             renderRecent();
         };
