@@ -9,80 +9,7 @@
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="assets/img/my_emoji.png" rel="icon">
-
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .sticky-zone {
-            position: sticky;
-            top: 0;
-            background: #ffffff;
-            z-index: 10;
-        }
-
-        .scroll-zone {
-            height: calc(100vh - 260px);
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        .category-btn {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: 0.2s;
-        }
-
-        .category-btn:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 5px 10px #00000033;
-        }
-
-        .emoji-item {
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .emoji-item:hover {
-            transform: scale(1.1);
-            box-shadow: 0 5px 10px #00000033;
-        }
-
-
-        .category-nav {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #ffe96a69;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px #00000066;
-            padding: 10px 14px;
-            border-radius: 30px;
-            z-index: 999;
-        }
-
-        .copy-toast {
-            position: fixed;
-            bottom: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #000000;
-            color: #ffffff;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 9999;
-        }
-    </style>
+    <link href="assets/css/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -125,7 +52,7 @@
         </div>
     </div>
 
-    <div class="container-fluid scroll-zone">
+    <div id="scrollZone" class="container-fluid scroll-zone">
         <div class="container my-5">
             <div id="contents" class="row"></div>
         </div>
@@ -134,7 +61,7 @@
     <div id="categoryNav" class="d-flex justify-content-center gap-2 shadow-lg category-nav"></div>
 
     <div id="toast" class="copy-toast">
-        Copied!
+        Copied to clipboard!
     </div>
 
     <script>
@@ -166,6 +93,8 @@
         var categoryNav = document.getElementById("categoryNav");
         var toast = document.getElementById("toast");
         var searchInput = document.getElementById("searchInput");
+        var scrollZone = document.getElementById("scrollZone");
+        var stickyZone = document.querySelector(".sticky-zone");
 
         var recentEmojis = JSON.parse(localStorage.getItem("recentEmojis")) || [];
         var allEmojis = [];
@@ -219,6 +148,19 @@
             renderRecent();
         };
 
+        const scrollToCategory = (categoryId) => {
+            var target = document.getElementById(categoryId);
+            if (!target) return;
+
+            var offset =
+                target.getBoundingClientRect().top -
+                scrollZone.getBoundingClientRect().top +
+                scrollZone.scrollTop -
+                stickyZone.offsetHeight + 150;
+
+            scrollZone.scrollTo({ top: offset, behavior: "smooth" });
+        };
+
         const renderEmojis = (emojis) => {
             contents.innerHTML = "";
             categoryNav.innerHTML = "";
@@ -227,7 +169,7 @@
             if (!emojis.length) {
                 contents.innerHTML = `
                     <div class="col-12 text-center text-muted">
-                        😢 No emojis match your search. Try another keyword!
+                        No emojis match your search. Try another keyword!
                     </div>
                 `;
                 return;
@@ -255,8 +197,7 @@
                 navHtml += `
                     <div class="category-btn"
                         style="background:`+ colors[category] + `;" title="` + category + `"
-                        onclick="document.getElementById('category-`+ category.replace(/ /g, '-') + `')
-                        .scrollIntoView({behavior:'smooth', block: 'nearest'})">
+                        onclick="scrollToCategory('category-`+ category.replace(/ /g, '-') + `')">
                         `+ icons[category] + `
                     </div>
                 `;
