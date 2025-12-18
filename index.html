@@ -23,10 +23,10 @@
         </div>
     </div>
 
-    <div class="container-fluid" style="height:120px; margin-top:-120px; background:linear-gradient(transparent, #ffffff);"></div>
+    <div class="container-fluid" style="height:120px; margin-top:-120px; background:linear-gradient(transparent, #ffffbd);"></div>
 
-    <div class="sticky-zone">
-        <div class="container my-3">
+    <div class="sticky-zone py-1 shadow-lg">
+        <div class="container">
             <div class="row justify-content-center g-2 py-2">
                 <div class="col-6 col-md-5 col-lg-4">
                     <input type="text" id="searchInput" class="form-control rounded-5" placeholder="Search emoji" oninput="doSearch()">
@@ -58,7 +58,12 @@
         </div>
     </div>
     
-    <div id="categoryNav" class="d-flex justify-content-center gap-2 shadow-lg category-nav"></div>
+    <div class="side-nav">
+        <div id="categoryNav" class="d-flex flex-column gap-2 category-nav"></div>
+        <a href="https://github.com/cheatsnake/emojihub" target="_blank" class="api-btn shadow-lg" title="Emoji data powered by EmojiHub API">
+            API
+        </a>
+    </div>
 
     <div id="toast" class="copy-toast">
         Copied to clipboard!
@@ -123,7 +128,7 @@
 
             recentEmojis = recentEmojis.filter(e => e !== emojiCode);
             recentEmojis.unshift(emojiCode);
-            recentEmojis = recentEmojis.slice(0, 54);
+            recentEmojis = recentEmojis.slice(0, 26);
 
             localStorage.setItem("recentEmojis", JSON.stringify(recentEmojis));
             renderRecent();
@@ -133,7 +138,7 @@
             recent.innerHTML = "";
             recentEmojis.forEach(emojiCode => {
                 recent.innerHTML += `
-                    <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center emoji-item"
+                    <div class="rounded-circle shadow-lg d-flex align-items-center justify-content-center emoji-item"
                         style="width:40px; height:40px; font-size:1.5rem; cursor:pointer; background:#ffffff;"
                         title="Copy" aria-label="Copy emoji" onclick="copyEmoji('`+ emojiCode + `')">
                         `+ emojiCode + `
@@ -156,7 +161,7 @@
                 target.getBoundingClientRect().top -
                 scrollZone.getBoundingClientRect().top +
                 scrollZone.scrollTop -
-                stickyZone.offsetHeight + 150;
+                stickyZone.offsetHeight + 175;
 
             scrollZone.scrollTo({ top: offset, behavior: "smooth" });
         };
@@ -187,16 +192,15 @@
             for (var category in grouped) {
                 html += `
                     <div class="col-12 my-4" id="category-`+ category.replace(/ /g, '-') + `">
-                        <div class="text-center fw-bold text-capitalize rounded-pill py-2"
-                            style="font-size:1.6rem; background:`+ colors[category] + `;">
+                        <div class="text-center fw-bold rounded-pill py-2"
+                            style="font-size:1.2rem; letter-spacing: 0.06em; background:`+ colors[category] + `;">
                             `+ category + `
                         </div>
                     </div>
                 `;
 
                 navHtml += `
-                    <div class="category-btn"
-                        style="background:`+ colors[category] + `;" title="` + category + `"
+                    <div class="category-btn shadow-lg" style="background:`+ colors[category] + `;" title="` + category + `"
                         onclick="scrollToCategory('category-`+ category.replace(/ /g, '-') + `')">
                         `+ icons[category] + `
                     </div>
